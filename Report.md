@@ -14,5 +14,3 @@
 #### **Programming Language**: AssemblyX86-64<br>
 #### **Compiler**: NASM 2.16.03<br>
 #### **Compile Flags**: -f elf64 -g -F dwarf<br>
-
-# **Test cases**<br>
