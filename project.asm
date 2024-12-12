@@ -17,6 +17,7 @@ section .data
     vertexNotFound db "Vertex is not found.",10,0
     invalidcolidx db "Invalid column index.", 10,0
     invalidrowidx db "Invalid row index.",10,0
+    unreachableError db "Target is unreachable.",10,0
     repeatedVertexError db "Vertex name cannot be repeated.",10,0
     endl db 10,0
     space db " ",0
@@ -170,13 +171,15 @@ _start:
         mov r13,1
         ;backward
         .loopGetPathBackward:
+            cmp r15,0
+            je unreachable
             mov r8, [vertexName + r15*8]
             mov [answer + r13], r8
             inc r13
             mov r15, [sourceArr + r15*8]
             cmp r15, rax
             jne .loopGetPathBackward
-            
+
         .loopbacksuccess:
             mov r15, [vertexName + rax*8]
             mov [answer + r13], r15
@@ -206,7 +209,7 @@ _start:
                     call toInt
                     lea rdi, [stringBuffer]
                     call printString
-                    
+                
                     ;call printInteger 
     lea rdi,[endl]
     call printString
@@ -552,3 +555,8 @@ printLigae:
     pop rsi
     pop rax
     ret
+
+unreachable:
+    lea rdi,[unreachableError]
+    call printString
+    jmp exitFail
