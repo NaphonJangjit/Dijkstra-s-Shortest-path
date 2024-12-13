@@ -1,5 +1,3 @@
-; Additional fixes have been added to address the issues mentioned
-
 section .data
     ; prompts and outputs
     inputGraphPrompt db "Enter the adjacency matrix of the graph (separated by space from first node to last node)",10,0
@@ -33,7 +31,7 @@ section .data
 section .bss
     stringBuffer resb 255      ; buffer for string input
     intBuffer resq 1           ; buffer for integer input
-    vertexName resq 60
+    vertexName resq 60	       ; vertices name
     vertexCount resq 1         ; stores the number of vertices
     graph resq 3600            ; adjacency matrix storage (max 60 vertices, 60x60)
     superUltimateBuffer resb 255 ; super ultimate very cool and very hot in the same time!!!!
@@ -41,10 +39,10 @@ section .bss
     targetPoint resq 1 ;stores the target point
 
     ;Dijkstra's algorithm table
-    distance resq 60
-    sourceArr resq 60
-    visitedArr resq 60
-    answer resb 60
+    distance resq 60 ;store distance for each vertex
+    sourceArr resq 60 ;store source for each vertex
+    visitedArr resq 60 ;store visited state for each vertex
+    answer resb 60 ;store answer
 
 section .text
     global _start
@@ -55,7 +53,7 @@ _start:
     lea rdi, [programName]
     call printString
     call printLigae
-
+    ; input vertices name
     lea rdi, [inputVertexNameString]
     call printString
 
@@ -63,7 +61,7 @@ _start:
     mov [vertexCount], r8
     call printLigae
     call isVertexNameRepeated
-    
+    ; input graph
     lea rdi, [inputGraphPrompt]
     call printString
 
@@ -71,7 +69,7 @@ _start:
     call printLigae
     lea rdi, [inputSourcePrompt]
     call printString
-
+   
     ;Get Start point
     mov rax,0   ;sys_read
     mov rdi,0   ;stdin
@@ -83,6 +81,7 @@ _start:
     ;loop for find vertex index
     call getVertexIdx
     mov [startPoint], r8
+
     ;Get Target point
     lea rdi, [inputTargetPrompt]
     call printString
@@ -97,6 +96,7 @@ _start:
     call getVertexIdx
     mov [targetPoint], r8
     call printLigae
+
     ;start dijkstra's shortest path algorithm
     mov rax, [startPoint]
     mov rbx, [targetPoint]
@@ -111,6 +111,7 @@ _start:
     mov r11,0
     mov r14,0
     mov r15,0
+    ; initail array
     prepareDistance:
         cmp r8,rdx
         jge endPrepare
@@ -130,6 +131,7 @@ _start:
         call getMinDistance ;returned r8
         mov qword [visitedArr + r8*8], 1
         ;update distance
+        ;loop for get shortest path
         .loopUpdateDistance:
             cmp r10, rdx
             jge .endLoopUpdateDistance
@@ -169,7 +171,7 @@ _start:
         mov [answer], r15
         mov r15, r9
         mov r13,1
-        ;backward
+        ;backtracking
         .loopGetPathBackward:
             cmp r15,0
             je unreachable
@@ -209,8 +211,6 @@ _start:
                     call toInt
                     lea rdi, [stringBuffer]
                     call printString
-                
-                    ;call printInteger 
     lea rdi,[endl]
     call printString
     call printLigae
@@ -247,6 +247,7 @@ getMinDistance:
         pop rbx
         pop rax
         ret
+;print() function
 printString:
     push rcx
 
@@ -268,7 +269,7 @@ printString:
 
     pop rcx
     ret
-
+;readInt() function
 readInt:
     ; Read an integer from the user
     call readBuffer
@@ -291,7 +292,7 @@ convert_loop:
 	jmp convert_loop
 .next:
     ret
-
+;read() function
 readBuffer:
     ; Read buffer using syscall
     mov rax, 0
@@ -306,7 +307,7 @@ clearString:
     xor rax, rax
     rep stosb
     ret
-
+;readGraph() function
 readGraph:
     mov r10, [vertexCount]         ; Number of vertices (matrix size)
     mov r13, 0                      ; Row index (counter)
@@ -391,22 +392,22 @@ readGraph:
 
 .endReadGraph:
     ret
-
+;exit(0)
 exitSuccess:
     mov rax,60
     mov rdi,0
     syscall
-
+;exit(0)
 exitFail:
     mov rax,60
     mov rdi,1
     syscall
-
+;throw error vertex out of bound
 errorVertexOutofBound:
     lea rdi,[vertexOutOfBound]
     call printString
     jmp exitFail
-
+;convert int to string
 toInt:
     ;input : rsi
     ;output : stringBuffer
@@ -462,7 +463,7 @@ toInt:
         pop rdx
         pop r8
         ret
-
+;read vertex name function
 readVertexNameSTR:
     call readBuffer
     mov r8,0
@@ -475,12 +476,12 @@ readVertexNameSTR:
         jmp .readVertexNameLoop
     .endReadVertexNameLoop:
         ret
-    
+;throw vertex not found exception 
 vertexNotFoundE:
     lea rdi, [vertexNotFound]
     call printString
     jmp exitFail
-
+;loop for get vertex index by using vertex name
 getVertexIdx:
     ;returned r8
     ;input r9
@@ -499,7 +500,7 @@ getVertexIdx:
         pop r11
         pop rax
         ret
-
+;check if vertex name is repeated then throw error
 isVertexNameRepeated:
     push rax
     push rbx
@@ -537,7 +538,7 @@ isVertexNameRepeated:
         pop rbx
         pop rax
         ret
-
+;print ++++++++ โรงลิเก
 printLigae:
     push rax
     push rsi
@@ -555,7 +556,7 @@ printLigae:
     pop rsi
     pop rax
     ret
-
+;throw error vertex is unreachable
 unreachable:
     lea rdi,[unreachableError]
     call printString
